@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>🫧 Neon Security Hub</title>
+
+    <!-- ================= SECURITY HEADERS (Cloudflare khuyên dùng) =================
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin
+Permissions-Policy: geolocation=()
+Content-Security-Policy:
+default-src 'self';
+script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com;
+style-src 'self' 'unsafe-inline';
+img-src 'self' data:;
+connect-src 'self';
+============================================================================= -->
+
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    ></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: Segoe UI, system-ui;
+      }
+      body {
+        margin: 0;
+        background: #05070f;
+        color: #e0ffff;
+        overflow: hidden;
+        transition: 0.4s;
+      }
+      body.pink {
+        background: #12040f;
+        color: #ffd6f5;
+      }
+      canvas {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 20px;
+        backdrop-filter: blur(10px);
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+      #toggle {
+        border: 1px solid currentColor;
+        background: none;
+        color: inherit;
+        padding: 6px 14px;
+        border-radius: 20px;
+        cursor: pointer;
+      }
+
+      #search {
+        width: 90%;
+        margin: 12px auto;
+        display: block;
+        padding: 12px 18px;
+        border-radius: 22px;
+        border: none;
+        outline: none;
+      }
+
+      #docs {
+        height: 62vh;
+        overflow: auto;
+        padding: 14px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 14px;
+        backdrop-filter: blur(8px);
+        transition: 0.25s;
+      }
+      .card:hover {
+        transform: scale(1.04);
+        box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
+      }
+      body.pink .card:hover {
+        box-shadow: 0 0 18px rgba(255, 100, 220, 0.35);
+      }
+      a {
+        color: #00ffff;
+        text-decoration: none;
+      }
+      body.pink a {
+        color: #ff66dd;
+      }
+      small {
+        opacity: 0.7;
+      }
+
+      #captcha {
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="bubble-bg"></canvas>
+
+    <header>
+      <h1>🫧 Neon Security Hub</h1>
+      <button id="toggle">💙 / 💖</button>
+    </header>
+
+    <div id="captcha">
+      <!-- 🔐 Cloudflare Turnstile -->
+      <div class="cf-turnstile" data-sitekey="PASTE_YOUR_SITE_KEY_HERE"></div>
+    </div>
+
+    <input
+      id="search"
+      placeholder="🔍 Tìm tài liệu bảo mật, hacking, crypto..."
+    />
+    <div id="docs"></div>
+
+    <script>
+      /* ================= CLICKJACKING PROTECTION ================= */
+      if (window.top !== window.self) document.body.innerHTML = "";
+
+      /* ================= BASIC HARDENING ================= */
+      document.addEventListener("contextmenu", (e) => e.preventDefault());
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "F12" || (e.ctrlKey && e.shiftKey)) e.preventDefault();
+      });
+
+      /* ================= BUBBLE BACKGROUND ================= */
+      const c = document.getElementById("bubble-bg");
+      const ctx = c.getContext("2d");
+      function resize() {
+        c.width = innerWidth;
+        c.height = innerHeight;
+      }
+      resize();
+      addEventListener("resize", resize);
+
+      let bubbles = [];
+      for (let i = 0; i < 80; i++) {
+        bubbles.push({
+          x: Math.random() * c.width,
+          y: Math.random() * c.height,
+          r: Math.random() * 18 + 6,
+          s: Math.random() * 0.7 + 0.2,
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, c.width, c.height);
+        bubbles.forEach((b) => {
+          b.y -= b.s;
+          if (b.y < -30) b.y = c.height + 30;
+          const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+          g.addColorStop(0, "rgba(0,255,255,.45)");
+          g.addColorStop(1, "transparent");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+
+      /* ================= THEME ================= */
+      toggle.onclick = () => document.body.classList.toggle("pink");
+
+      /* ================= REAL SECURITY DOCS ================= */
+      const docsData = [
+        {
+          t: "OWASP Top 10",
+          c: "Web Security",
+          l: "https://owasp.org/www-project-top-ten/",
+        },
+        {
+          t: "OWASP Cheat Sheet",
+          c: "Reference",
+          l: "https://cheatsheetseries.owasp.org",
+        },
+        {
+          t: "NIST Cybersecurity Framework",
+          c: "Standard",
+          l: "https://www.nist.gov/cyberframework",
+        },
+        {
+          t: "MIT Computer System Security",
+          c: "Course",
+          l: "https://ocw.mit.edu/courses/6-858-computer-systems-security-fall-2014/",
+        },
+        {
+          t: "Hacking: The Art of Exploitation",
+          c: "Book",
+          l: "https://nostarch.com/hacking2.htm",
+        },
+        {
+          t: "Applied Cryptography",
+          c: "Cryptography",
+          l: "https://www.schneier.com/books/applied-cryptography/",
+        },
+        { t: "TryHackMe", c: "Labs", l: "https://tryhackme.com" },
+        {
+          t: "Hack The Box Academy",
+          c: "Labs",
+          l: "https://academy.hackthebox.com",
+        },
+        { t: "Kali Linux Docs", c: "Tool", l: "https://www.kali.org/docs/" },
+        { t: "Metasploit Docs", c: "Tool", l: "https://docs.metasploit.com" },
+        {
+          t: "Google Web Security",
+          c: "Web Security",
+          l: "https://developers.google.com/web/fundamentals/security",
+        },
+        {
+          t: "Cloud Security Alliance",
+          c: "Cloud",
+          l: "https://cloudsecurityalliance.org",
+        },
+        {
+          t: "CISA Security Resources",
+          c: "Government",
+          l: "https://www.cisa.gov/resources-tools",
+        },
+        {
+          t: "ENISA Threat Landscape",
+          c: "Research",
+          l: "https://www.enisa.europa.eu/topics/threat-risk-management",
+        },
+        { t: "Crypto 101", c: "Cryptography", l: "https://crypto101.io" },
+        { t: "Red Team Field Manual", c: "Book", l: "https://redteam.guide" },
+        {
+          t: "Blue Team Handbook",
+          c: "Book",
+          l: "https://www.amazon.com/Blue-Team-Handbook-Condensed/dp/1500734756",
+        },
+        {
+          t: "OWASP WebGoat",
+          c: "Practice",
+          l: "https://owasp.org/www-project-webgoat/",
+        },
+      ];
+
+      /* ================= SEARCH ================= */
+      const docs = document.getElementById("docs");
+      const search = document.getElementById("search");
+
+      function render(list) {
+        docs.innerHTML = "";
+        list.forEach((d) => {
+          docs.innerHTML += `
+   <div class="card">
+    <b>${d.t}</b><br>
+    <small>${d.c}</small><br><br>
+    <a href="${d.l}" target="_blank">🔗 Mở tài liệu</a>
+   </div>`;
+        });
+      }
+      render(docsData);
+
+      search.oninput = () => {
+        const q = search.value.toLowerCase();
+        render(
+          docsData.filter(
+            (d) =>
+              d.t.toLowerCase().includes(q) || d.c.toLowerCase().includes(q)
+          )
+        );
+      };
+    </script>
+  </body>
+</html>
